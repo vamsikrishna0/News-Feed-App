@@ -1,0 +1,6 @@
+{
+  "name": "News-feed-app",
+  "tagline": "An Android app to get news feed from The Guardian using a public REST API",
+  "body": "NewsFeed App\r\n==============\r\n\r\nThis is a small Android App which talks to an external API from Guardian and gets the News Feed.\r\n\r\nDeveloped as part of Android Beginner Nanodegree on Udacity.\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
