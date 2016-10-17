@@ -36,15 +36,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //A Uri.Builder object is created. It makes building API query strings easy
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("http")
                 .authority("content.guardianapis.com")
                 .appendPath("search")
                 .appendQueryParameter("show-fields", "thumbnail")
-                .appendQueryParameter("q", queryString).appendQueryParameter("api-key", "test");
+                .appendQueryParameter("q", queryString)
+                .appendQueryParameter("api-key", "test");
         stringUrl = builder.build().toString();
 
         try {
+            //Here the getNewsFeed() method is called which gets the newsfeed for a particular string
             getNewsFeed();
         } catch (ExecutionException e) {
             e.printStackTrace();
@@ -58,7 +61,11 @@ public class MainActivity extends AppCompatActivity {
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        //Check if the network is active
         if (networkInfo != null && networkInfo.isConnected()) {
+
+            // The news feed is retrieved in an AsyncTask class. execute method takes in the stringUrl and starts data retrieval
             new GetNewsFeedTask().execute(stringUrl);
 
         } else {
@@ -95,24 +102,34 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        /* This method puts the returned data onto the listView using an Adapter.
+        * */
         @Override
         protected void onPostExecute(String res) {
 
             try {
+                //The response is a String. Its converted to a JSON object.
                 JSONObject object = new JSONObject(res).getJSONObject("response");
                 int numberOfItems = object.getInt("total");
+
+                //Check if the search doesn't return any results and make a Toast message and return.
                 if (numberOfItems == 0) {
                     Toast.makeText(MainActivity.this, "No search matching your query", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                //A JSONArray of results is created.
                 JSONArray items = object.getJSONArray("results");
 
 
+                //For each item we add it to a NewsItem ArrayList object.
                 for (int i = 0; i < items.length(); i++) {
                     JSONObject item = items.getJSONObject(i);
 
                     String title = item.getString("webTitle");
                     String webLink = item.getString("webUrl");
+
+                    //Check if it has thumbnail and call the appropriate constructor accordingly
                     if (item.has("fields") && item.getJSONObject("fields").has("thumbnail")) {
                         String thumbnailLink = item.getJSONObject("fields").getString("thumbnail");
 
@@ -121,16 +138,24 @@ public class MainActivity extends AppCompatActivity {
                         newsItems.add(new NewsItem(title, webLink));
                 }
 
+                //Get the ListView item.
                 ListView listView = (ListView) findViewById(R.id.news_list);
+
+                //Connect the ArrayList to the Adapter(NewsAdapter).
+                //Create a new Adapter class.
                 NewsAdapter adapter = new NewsAdapter(MainActivity.this, newsItems);
 
+                //Set a onClickListener on each item of the list.
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+                        // We use position to get the corresponding item.
+                        // We create a  new Intent and start it.
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(newsItems.get(position).getWebUrl()));
                         startActivity(intent);
                     }
                 });
+                //Actually plug the adapter to the ListView
                 listView.setAdapter(adapter);
             } catch (JSONException e) {
                 e.printStackTrace();
